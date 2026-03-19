@@ -81,31 +81,27 @@ class BaseResult(Generic[T]):
 
 
 # ======================================
-# Sync/Async Implementations
+# Sync/Async Factories
 # ======================================
 
 
-class Result(Generic[T]):
-    @staticmethod
-    def from_fn(fn: Callable[..., T], *args: Any, **kwargs: Any) -> BaseResult[T]:
-        try:
-            output = fn(*args, **kwargs)
-            error = None
-        except Exception as e:
-            output = Unset
-            error = e
-        return BaseResult[T](ok=output, err=error)
+def Result(fn: Callable[..., T], *args: Any, **kwargs: Any) -> BaseResult[T]:
+    try:
+        output = fn(*args, **kwargs)
+        error = None
+    except Exception as e:
+        output = Unset
+        error = e
+    return BaseResult[T](ok=output, err=error)
 
 
-class AsyncResult(Generic[T]):
-    @staticmethod
-    async def from_fn(
-        fn: Callable[..., Awaitable[T]], *args: Any, **kwargs: Any
-    ) -> BaseResult[T]:
-        try:
-            output = await fn(*args, **kwargs)
-            error = None
-        except Exception as e:
-            output = Unset
-            error = e
-        return BaseResult[T](ok=output, err=error)
+async def AsyncResult(
+    fn: Callable[..., Awaitable[T]], *args: Any, **kwargs: Any
+) -> BaseResult[T]:
+    try:
+        output = await fn(*args, **kwargs)
+        error = None
+    except Exception as e:
+        output = Unset
+        error = e
+    return BaseResult[T](ok=output, err=error)
