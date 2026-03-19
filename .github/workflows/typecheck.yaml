@@ -1,0 +1,24 @@
+name: Typecheck
+
+on:
+  pull_request:
+
+jobs:
+  typecheck:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 1
+
+      - name: Install uv
+        uses: astral-sh/setup-uv@v6
+        with:
+          python-version: "3.10"
+          enable-cache: true
+
+      - name: Set up Jake
+        uses: AstraBert/setup-jake@v0.1.0
+
+      - name: Run Ty
+        run: jake typecheck
