@@ -8,6 +8,10 @@ T = TypeVar("T")
 
 
 class UnsetType:
+    """
+    Sentinel type used to describe an `ok` value when an error has happened.
+    """
+
     pass
 
 
@@ -34,6 +38,10 @@ class UnsetError(Exception):
 
 
 class ExpectError(Exception):
+    """
+    Raised when .expect() resolves to an error.
+    """
+
     def __init__(self, message: str) -> None:
         self.message = message
 
@@ -50,17 +58,47 @@ class ExpectError(Exception):
 
 
 class BaseResult(Generic[T]):
+    """
+    Base representation of the Rust result type.
+
+    Attributes:
+        ok (T | UnsetType): the result of an operation, or `Unset` if the operation threw an error.
+        err (Exception | None): an exception thrown by an operation, or `None` if the operation did not throw exceptions.
+    """
+
     def __init__(self, ok: T | UnsetType, err: Exception | None) -> None:
         self.ok = ok
         self.err = err
 
     def is_ok(self) -> bool:
-        return self.err is None
+        """
+        Check if the result is ok and its value is not Unset.
+
+        Returns:
+            bool: True if there result is ok and set, False otherwise.
+        """
+        return self.err is None and not isinstance(self.ok, UnsetType)
 
     def is_err(self) -> bool:
-        return self.err is not None
+        """
+        Check if there was an exception or the result is Unset.
+
+        Returns:
+            bool: True if there was an exception or the result is Unset, False otherwise.
+        """
+        return self.err is not None or isinstance(self.ok, UnsetType)
 
     def unwrap(self) -> T:
+        """
+        Unwrap a result, throwing an exception if the `err` attribute is not None, or if the result is Unset.
+
+        Returns:
+            T: the typed result.
+
+        Raises:
+            Exception: exception from `err`.
+            UnsetError: exception if the result is Unset.
+        """
         if self.err is not None:
             raise self.err
         if not isinstance(self.ok, UnsetType):
@@ -68,11 +106,26 @@ class BaseResult(Generic[T]):
         raise UnsetError()
 
     def unwrap_or(self, default: T) -> T:
+        """
+        Unwrap a result, falling back to a default if the `err` attribute is not None, or if the result is Unset.
+
+        Returns:
+            T: the typed result (or the provided default).
+        """
         if self.err is not None or isinstance(self.ok, UnsetType):
             return default
         return self.ok
 
     def expect(self, message: str) -> T:
+        """
+        Unwrap a result, always throwing an exception of type ExpectError (with a custom message) if the `err` attribute is not None or if the result is Unset.
+
+        Returns:
+            T: typed result.
+
+        Raises:
+            ExpectError: error with the provided custom message.
+        """
         if self.err is not None:
             raise ExpectError(message) from self.err
         if isinstance(self.ok, UnsetType):
@@ -86,6 +139,18 @@ class BaseResult(Generic[T]):
 
 
 def Result(fn: Callable[..., T], *args: Any, **kwargs: Any) -> BaseResult[T]:
+    """
+    Construct a base result from the execution of a synchronous function.
+
+    Args:
+        fn (Callable[..., T]): synchronous function.
+        *args: arbitrary number of positional arguments (passed to the function).
+        **kwargs: arbitrary number of keyword arguments (passed to the function).
+
+    Returns:
+        BaseResult[T]: the result of the function, wrapped in BaseResult.
+    """
+
     try:
         output = fn(*args, **kwargs)
         error = None
@@ -98,6 +163,17 @@ def Result(fn: Callable[..., T], *args: Any, **kwargs: Any) -> BaseResult[T]:
 async def AsyncResult(
     fn: Callable[..., Awaitable[T]], *args: Any, **kwargs: Any
 ) -> BaseResult[T]:
+    """
+    Construct a base result from the execution of an asynchronous function.
+
+    Args:
+        fn (Callable[..., Awaitable[T]]): asynchronous function.
+        *args: arbitrary number of positional arguments (passed to the function).
+        **kwargs: arbitrary number of keyword arguments (passed to the function).
+
+    Returns:
+        BaseResult[T]: the result of the function, wrapped in BaseResult.
+    """
     try:
         output = await fn(*args, **kwargs)
         error = None
