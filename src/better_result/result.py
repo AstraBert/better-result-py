@@ -149,6 +149,9 @@ def Result(fn: Callable[..., T], *args: Any, **kwargs: Any) -> BaseResult[T]:
 
     Returns:
         BaseResult[T]: the result of the function, wrapped in BaseResult.
+
+    NOTE: this implementation does not preserve error stack traces for performance optimization, thus it should be used
+    only for control flow and not for post-mortem debugging
     """
 
     try:
@@ -156,12 +159,15 @@ def Result(fn: Callable[..., T], *args: Any, **kwargs: Any) -> BaseResult[T]:
         error = None
     except Exception as e:
         output = Unset
+        e.__traceback__ = None
         error = e
     return BaseResult[T](ok=output, err=error)
 
 
 async def AsyncResult(
-    fn: Callable[..., Awaitable[T]], *args: Any, **kwargs: Any
+    fn: Callable[..., Awaitable[T]],
+    *args: Any,
+    **kwargs: Any,
 ) -> BaseResult[T]:
     """
     Construct a base result from the execution of an asynchronous function.
@@ -173,11 +179,15 @@ async def AsyncResult(
 
     Returns:
         BaseResult[T]: the result of the function, wrapped in BaseResult.
+
+    NOTE: this implementation does not preserve error stack traces for performance optimization, thus it should be used
+    only for control flow and not for post-mortem debugging
     """
     try:
         output = await fn(*args, **kwargs)
         error = None
     except Exception as e:
         output = Unset
+        e.__traceback__ = None
         error = e
     return BaseResult[T](ok=output, err=error)

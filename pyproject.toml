@@ -4,7 +4,7 @@ build-backend = "uv_build"
 
 [project]
 name = "better-result-py"
-version = "0.1.0"
+version = "1.0.0"
 description = "Yet another implementation of Rust's Result type: minimal, dependency-free and fully-typed."
 readme = "README.md"
 requires-python = ">=3.10,<4"
@@ -14,9 +14,15 @@ dependencies = []
 dev = [
     "pytest>=9.0.2",
     "pytest-asyncio>=1.3.0",
+    "pytest-benchmark>=5.2.3",
     "ruff>=0.15.6",
     "ty>=0.0.23",
 ]
 
 [tool.uv.build-backend]
 module-name = "better_result"
+
+[tool.pytest.ini_options]
+addopts = [
+  "-s",
+]
