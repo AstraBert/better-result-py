@@ -4,7 +4,7 @@ build-backend = "uv_build"
 
 [project]
 name = "better-result-py"
-version = "1.0.0"
+version = "1.1.0"
 description = "Yet another implementation of Rust's Result type: minimal, dependency-free and fully-typed."
 readme = "README.md"
 requires-python = ">=3.10,<4"

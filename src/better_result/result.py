@@ -134,6 +134,66 @@ class BaseResult(Generic[T]):
 
 
 # ======================================
+# Ok/Err Classes (for control flow)
+# ======================================
+
+
+class ResultError(Exception):
+    """
+    Custom error raised by `Err` when only an error message is passed to its constructor.
+    """
+
+    def __init__(self, message: str) -> None:
+        self.message: str = message
+
+    def __str__(self) -> str:
+        return self.message
+
+    def __repr__(self) -> str:
+        return self.message
+
+
+class Ok(BaseResult[T]):
+    """
+    Subclass of BaseResult to represent the success value of an operation.
+
+    Attributes:
+        ok (T): the result of the operation.
+    """
+
+    def __init__(self, ok: T) -> None:
+        super().__init__(ok, None)
+
+
+class Err(BaseResult[T]):
+    """
+    Subclass of BaseResult to represent the failure value of an operation.
+
+    Attributes:
+        err (Exception): the exception raised by the operation
+    """
+
+    def __init__(
+        self, error_message: str | None = None, *, err: Exception | None = None
+    ) -> None:
+        """
+        Initialize the `Err` class.
+
+        Args:
+            error_message (str | None): error message, gets transformed into a ResultError when it is raised as an exception (during unwraps). Optional
+            err (Exception | None): exception to be raised. Optional (one of `error_message` and `err` should be set).
+        """
+        if error_message is not None:
+            super().__init__(Unset, ResultError(error_message))
+        elif err is not None:
+            super().__init__(Unset, err)
+        else:
+            raise RuntimeError(
+                "`Err` should be initialized with either an error message or an exception"
+            )
+
+
+# ======================================
 # Sync/Async Factories
 # ======================================
 
@@ -191,3 +251,12 @@ async def AsyncResult(
         e.__traceback__ = None
         error = e
     return BaseResult[T](ok=output, err=error)
+
+
+if __name__ == "__main__":
+
+    def something(i: int) -> BaseResult[int]:
+        if i == 0:
+            return Err("an error occurred")
+        else:
+            return Ok(i)

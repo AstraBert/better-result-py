@@ -54,6 +54,34 @@ else:
     print(result.err)
 ```
 
+## Explicit Ok / Err construction
+
+For control-flow patterns where you want to return a typed result directly (without wrapping a callable) use `Ok` and `Err`.
+
+```python
+from better_result import Ok, Err, BaseResult
+
+def divide(a: int, b: int) -> BaseResult[float]:
+    if b == 0:
+        return Err("division by zero")
+    return Ok(a / b)
+
+result = divide(10, 2)
+result.is_ok()   # True
+result.ok        # 5.0
+
+result = divide(10, 0)
+result.is_err()  # True
+result.err       # ResultError("division by zero")
+```
+
+`Err` accepts either a plain string message (wrapped in `ResultError`) or an existing exception via the `err` keyword argument:
+
+```python
+Err("something went wrong")          # error_message form
+Err(err=ValueError("bad value"))     # exception form
+```
+
 ## Extracting values
 
 ### `unwrap()`
